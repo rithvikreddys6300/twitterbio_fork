@@ -1,5 +1,7 @@
 {
   "private": true,
+  "name": "social-bio-generator",
+  "description": "Generate social media bios for multiple platforms using AI",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

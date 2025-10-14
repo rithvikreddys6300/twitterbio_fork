@@ -4,11 +4,13 @@ import Image from "next/image";
 import { useRef, useState } from "react";
 import { Toaster, toast } from "react-hot-toast";
 import DropDown, { VibeType } from "../components/DropDown";
+import PlatformDropDown from "../components/PlatformDropDown";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 import LoadingDots from "../components/LoadingDots";
 import Toggle from "../components/Toggle";
 import { ChatCompletionStream } from "together-ai/lib/ChatCompletionStream";
+import { SocialPlatform, PLATFORM_CONFIGS } from "../types/platforms";
 
 export default function Home() {
   const [loading, setLoading] = useState(false);
@@ -16,6 +18,7 @@ export default function Home() {
   const [vibe, setVibe] = useState<VibeType>("Professional");
   const [generatedBios, setGeneratedBios] = useState<String>("");
   const [isLlama, setIsLlama] = useState(false);
+  const [platform, setPlatform] = useState<SocialPlatform>("twitter");
 
   const bioRef = useRef<null | HTMLDivElement>(null);
 
@@ -25,13 +28,29 @@ export default function Home() {
     }
   };
 
-  const prompt = `Generate 3 ${
-    vibe === "Casual" ? "relaxed" : vibe === "Funny" ? "silly" : "Professional"
-  } twitter biographies with no hashtags and clearly labeled "1.", "2.", and "3.". Only return these 3 twitter bios, nothing else. ${
-    vibe === "Funny" ? "Make the biographies humerous" : ""
-  }Make sure each generated biography is less than 300 characters, has short sentences that are found in Twitter bios, and feel free to use this context as well: ${bio}${
-    bio.slice(-1) === "." ? "" : "."
-  }`;
+  const currentPlatformConfig = PLATFORM_CONFIGS[platform];
+  
+  const generatePrompt = () => {
+    const vibeText = vibe === "Casual" ? "relaxed" : vibe === "Funny" ? "silly" : "Professional";
+    const platformSpecific = platform === "linkedin" ? 
+      "professional and achievement-focused" : 
+      platform === "instagram" ? 
+      "creative and visually engaging" :
+      platform === "tiktok" ?
+      "trendy and catchy" :
+      "engaging and personality-driven";
+    
+    const hashtagInstruction = currentPlatformConfig.supportsTags ? "" : " with no hashtags";
+    const emojiInstruction = currentPlatformConfig.supportsEmojis ? " Feel free to include relevant emojis." : " Do not include emojis.";
+    
+    return `Generate 3 ${vibeText} ${currentPlatformConfig.bioLabel}s${hashtagInstruction} that are ${platformSpecific} and clearly labeled "1.", "2.", and "3.". Only return these 3 bios, nothing else. ${
+      vibe === "Funny" ? "Make the biographies humorous. " : ""
+    }Make sure each generated biography is less than ${currentPlatformConfig.maxCharacters} characters, has short sentences that are commonly found in ${currentPlatformConfig.displayName} bios.${emojiInstruction} Use this context as inspiration: ${bio}${
+      bio.slice(-1) === "." ? "" : "."
+    }`;
+  };
+
+  const prompt = generatePrompt();
 
   const generateBio = async (e: any) => {
     e.preventDefault();
@@ -44,6 +63,7 @@ export default function Home() {
       },
       body: JSON.stringify({
         prompt,
+        platform,
         model: isLlama
           ? "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo"
           : "mistralai/Mixtral-8x7B-Instruct-v0.1",
@@ -69,7 +89,7 @@ export default function Home() {
           <b>126,657</b> bios generated so far
         </p>
         <h1 className="sm:text-6xl text-4xl max-w-[708px] font-bold text-slate-900">
-          Generate your next Twitter bio using AI
+          Generate your next social media bio using AI
         </h1>
         <div className="mt-7">
           <Toggle isGPT={isLlama} setIsGPT={setIsLlama} />
@@ -85,6 +105,22 @@ export default function Home() {
               className="mb-5 sm:mb-0"
             />
             <p className="text-left font-medium">
+              Choose your social media platform.
+            </p>
+          </div>
+          <div className="block mb-5">
+            <PlatformDropDown platform={platform} setPlatform={setPlatform} />
+          </div>
+          
+          <div className="flex mt-5 items-center space-x-3">
+            <Image
+              src="/2-black.png"
+              width={30}
+              height={30}
+              alt="2 icon"
+              className="mb-5 sm:mb-0"
+            />
+            <p className="text-left font-medium">
               Drop in your job{" "}
               <span className="text-slate-500">(or your favorite hobby)</span>.
             </p>
@@ -94,10 +130,15 @@ export default function Home() {
             onChange={(e) => setBio(e.target.value)}
             rows={4}
             className="w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black my-5"
-            placeholder={"e.g. Amazon CEO"}
+            placeholder={currentPlatformConfig.placeholder}
           />
           <div className="flex mb-5 items-center space-x-3">
-            <Image src="/2-black.png" width={30} height={30} alt="1 icon" />
+            <Image 
+              src="/3-black.png" 
+              width={30} 
+              height={30} 
+              alt="3 icon" 
+            />
             <p className="text-left font-medium">Select your vibe.</p>
           </div>
           <div className="block">
@@ -115,7 +156,7 @@ export default function Home() {
               className="bg-black rounded-xl text-white font-medium px-4 py-2 sm:mt-10 mt-8 hover:bg-black/80 w-full"
               onClick={(e) => generateBio(e)}
             >
-              Generate your bio &rarr;
+              Generate your {currentPlatformConfig.bioLabel} &rarr;
             </button>
           )}
         </div>
@@ -133,7 +174,7 @@ export default function Home() {
                   className="sm:text-4xl text-3xl font-bold text-slate-900 mx-auto"
                   ref={bioRef}
                 >
-                  Your generated bios
+                  Your generated {currentPlatformConfig.bioLabel}s
                 </h2>
               </div>
               <div className="space-y-8 flex flex-col items-center justify-center max-w-xl mx-auto">
@@ -146,7 +187,7 @@ export default function Home() {
                         className="bg-white rounded-xl shadow-md p-4 hover:bg-gray-100 transition cursor-copy border"
                         onClick={() => {
                           navigator.clipboard.writeText(generatedBio);
-                          toast("Bio copied to clipboard", {
+                          toast(`${currentPlatformConfig.bioLabel} copied to clipboard`, {
                             icon: "✂️",
                           });
                         }}
