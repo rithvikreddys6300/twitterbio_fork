@@ -43,7 +43,7 @@ export default function Footer() {
           </svg>
         </Link>
         <Link
-          href="https://github.com/Nutlope/twitterbio"
+          href="https://github.com/Nutlope/mysocialbio"
           className="group transition-transform duration-300 hover:scale-110"
           aria-label="GitHub"
         >

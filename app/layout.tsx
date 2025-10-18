@@ -13,11 +13,11 @@ const geistMono = localFont({
   variable: "--font-geist-mono",
 });
 
-let title = "Tweetbio – AI Twitter Bio Generator";
-let description = "Generate your next Twitter bio in seconds";
-let url = "https://www.twitterbio.io/";
-let ogimage = "https://www.twitterbio.io/og-image.png";
-let sitename = "twitterbio.io";
+let title = "MySocialBio – AI Social Media Bio Generator";
+let description = "Generate your next social media bio for any platform in seconds";
+let url = "https://www.mysocialbio.io/";
+let ogimage = "https://www.mysocialbio.io/og-image.png";
+let sitename = "mysocialbio.io";
 
 export const metadata: Metadata = {
   metadataBase: new URL(url),
@@ -51,7 +51,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full">
       <head>
-        <PlausibleProvider domain="twitterbio.io" />
+        <PlausibleProvider domain="mysocialbio.io" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-full`}

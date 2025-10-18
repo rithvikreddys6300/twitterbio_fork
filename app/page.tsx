@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRef, useState } from "react";
 import { Toaster, toast } from "react-hot-toast";
 import DropDown, { VibeType } from "../components/DropDown";
+import PlatformDropDown, { PlatformType } from "../components/PlatformDropDown";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 import LoadingDots from "../components/LoadingDots";
@@ -14,6 +15,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [bio, setBio] = useState("");
   const [vibe, setVibe] = useState<VibeType>("Professional");
+  const [platform, setPlatform] = useState<PlatformType>("Twitter/X");
   const [generatedBios, setGeneratedBios] = useState<String>("");
   const [isLlama, setIsLlama] = useState(false);
 
@@ -25,11 +27,11 @@ export default function Home() {
     }
   };
 
-  const prompt = `Generate 3 ${
-    vibe === "Casual" ? "relaxed" : vibe === "Funny" ? "silly" : "Professional"
-  } twitter biographies with no hashtags and clearly labeled "1.", "2.", and "3.". Only return these 3 twitter bios, nothing else. ${
-    vibe === "Funny" ? "Make the biographies humerous" : ""
-  }Make sure each generated biography is less than 300 characters, has short sentences that are found in Twitter bios, and feel free to use this context as well: ${bio}${
+  const prompt = `${
+    vibe === "Casual" ? "relaxed" : vibe === "Funny" ? "silly" : "professional"
+  } ${platform.toLowerCase()} biographies with no hashtags. ${
+    vibe === "Funny" ? "Make the biographies humorous" : ""
+  } Use this context: ${bio}${
     bio.slice(-1) === "." ? "" : "."
   }`;
 
@@ -37,28 +39,36 @@ export default function Home() {
     e.preventDefault();
     setGeneratedBios("");
     setLoading(true);
-    const response = await fetch("/api/together", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        prompt,
-        model: isLlama
-          ? "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo"
-          : "mistralai/Mixtral-8x7B-Instruct-v0.1",
-      }),
-    });
+    
+    try {
+      const response = await fetch("/api/together", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt,
+          platform,
+          model: isLlama
+            ? "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo"
+            : "mistralai/Mixtral-8x7B-Instruct-v0.1",
+        }),
+      });
 
-    if (!response.ok) {
-      throw new Error(response.statusText);
+      if (!response.ok) {
+        throw new Error(response.statusText);
+      }
+
+      const runner = ChatCompletionStream.fromReadableStream(response.body!);
+      runner.on("content", (delta) => setGeneratedBios((prev) => prev + delta));
+
+      scrollToBios();
+    } catch (error) {
+      console.error("Error generating bio:", error);
+      toast.error("Failed to generate bio. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    const runner = ChatCompletionStream.fromReadableStream(response.body!);
-    runner.on("content", (delta) => setGeneratedBios((prev) => prev + delta));
-
-    scrollToBios();
-    setLoading(false);
   };
 
   return (
@@ -77,7 +87,7 @@ export default function Home() {
             border: '1px solid var(--border-primary)'
           }}
         >
-          <span className="font-bold" style={{ color: 'var(--accent-primary)' }}>126,657</span> bios generated so far
+          <span className="font-bold" style={{ color: 'var(--accent-primary)' }}>200,000+</span> social media bios generated so far
         </div>
 
         {/* Main Title */}
@@ -85,8 +95,8 @@ export default function Home() {
           className="sm:text-6xl text-4xl max-w-4xl font-bold mb-4 leading-tight"
           style={{ color: 'var(--text-primary)' }}
         >
-          Generate your next{" "}
-          <span className="gradient-text">Twitter bio</span>{" "}
+          Generate your perfect{" "}
+          <span className="gradient-text">social media bio</span>{" "}
           using AI
         </h1>
         
@@ -94,7 +104,7 @@ export default function Home() {
           className="text-xl sm:text-2xl max-w-2xl mb-10"
           style={{ color: 'var(--text-secondary)' }}
         >
-          Create professional, engaging Twitter bios in seconds with the power of AI
+          Create engaging bios for any platform in seconds with the power of AI
         </p>
 
         {/* Model Toggle */}
@@ -117,8 +127,29 @@ export default function Home() {
               className="text-left font-medium text-lg"
               style={{ color: 'var(--text-primary)' }}
             >
-              Drop in your job{" "}
-              <span style={{ color: 'var(--text-secondary)' }}>(or your favorite hobby)</span>
+              Choose your platform
+            </p>
+          </div>
+          
+          <div className="mb-10">
+            <PlatformDropDown platform={platform} setPlatform={(newPlatform) => setPlatform(newPlatform)} />
+          </div>
+
+          {/* Step 2 */}
+          <div className="flex items-center space-x-4 mb-6">
+            <div 
+              className="flex items-center justify-center w-10 h-10 rounded-full 
+                         font-bold text-white shadow-custom"
+              style={{ background: 'var(--gradient-primary)' }}
+            >
+              2
+            </div>
+            <p 
+              className="text-left font-medium text-lg"
+              style={{ color: 'var(--text-primary)' }}
+            >
+              Describe yourself{" "}
+              <span style={{ color: 'var(--text-secondary)' }}>(job, hobby, interests)</span>
             </p>
           </div>
           
@@ -135,17 +166,17 @@ export default function Home() {
               color: 'var(--text-primary)',
               border: '2px solid'
             }}
-            placeholder="e.g. Amazon CEO"
+            placeholder="e.g. Software engineer who loves hiking and coffee"
           />
           
-          {/* Step 2 */}
+          {/* Step 3 */}
           <div className="flex mb-6 mt-10 items-center space-x-4">
             <div 
               className="flex items-center justify-center w-10 h-10 rounded-full 
                          font-bold text-white shadow-custom"
               style={{ background: 'var(--gradient-primary)' }}
             >
-              2
+              3
             </div>
             <p 
               className="text-left font-medium text-lg"
@@ -183,7 +214,7 @@ export default function Home() {
               }}
               onClick={(e) => generateBio(e)}
             >
-              Generate your bio ✨
+              Generate your {platform} bio ✨
             </button>
           )}
         </div>
@@ -210,7 +241,7 @@ export default function Home() {
                   style={{ color: 'var(--text-primary)' }}
                   ref={bioRef}
                 >
-                  Your generated bios
+                  Your generated {platform} bios
                 </h2>
               </div>
               <div className="grid gap-6 md:grid-cols-1 max-w-3xl mx-auto">
@@ -227,7 +258,7 @@ export default function Home() {
                           border: '1px solid var(--border-primary)'
                         }}
                         onClick={() => {
-                          navigator.clipboard.writeText(generatedBio);
+                          navigator.clipboard.writeText(generatedBio.trim());
                           toast("Bio copied to clipboard", {
                             icon: "✂️",
                           });
@@ -238,7 +269,13 @@ export default function Home() {
                           className="text-lg leading-relaxed"
                           style={{ color: 'var(--text-primary)' }}
                         >
-                          {generatedBio}
+                          {generatedBio.trim()}
+                        </p>
+                        <p 
+                          className="text-sm mt-2 opacity-70"
+                          style={{ color: 'var(--text-secondary)' }}
+                        >
+                          {generatedBio.trim().length} characters
                         </p>
                       </div>
                     );

@@ -18,7 +18,7 @@ export default function Header() {
         <h1 
           className="sm:text-3xl text-2xl font-bold ml-2 tracking-tight gradient-text"
         >
-          twitterbio.io
+          MySocialBio
         </h1>
       </Link>
       
@@ -34,7 +34,7 @@ export default function Header() {
             color: 'var(--text-secondary)',
             border: '1px solid'
           }}
-          href="https://github.com/Nutlope/twitterbio"
+          href="https://github.com/Nutlope/mysocialbio"
           target="_blank"
           rel="noopener noreferrer"
         >

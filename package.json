@@ -1,4 +1,6 @@
 {
+  "name": "mysocialbio",
+  "description": "AI-powered social media bio generator for multiple platforms",
   "private": true,
   "scripts": {
     "dev": "next dev",
