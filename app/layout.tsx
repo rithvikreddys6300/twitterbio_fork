@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import PlausibleProvider from "next-plausible";
 import localFont from "next/font/local";
 import { ThemeProvider } from "../components/ThemeContext";
+import SessionProvider from "../components/SessionProvider";
 import "./globals.css";
 
 const geistSans = localFont({
@@ -56,9 +57,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-full`}
       >
-        <ThemeProvider>
-          {children}
-        </ThemeProvider>
+        <SessionProvider>
+          <ThemeProvider>
+            {children}
+          </ThemeProvider>
+        </SessionProvider>
       </body>
     </html>
   );

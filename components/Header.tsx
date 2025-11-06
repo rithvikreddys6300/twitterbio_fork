@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Github from "./GitHub";
 import ThemeToggle from "./ThemeToggle";
+import AuthButton from "./AuthButton";
 
 export default function Header() {
   return (
@@ -23,9 +24,23 @@ export default function Header() {
       </Link>
       
       <div className="flex items-center space-x-3">
+        <Link
+          href="/pricing"
+          className="hidden sm:flex items-center rounded-full px-4 py-2 text-sm 
+                     shadow-custom hover-scale transition-all duration-300"
+          style={{
+            backgroundColor: 'var(--bg-secondary)',
+            borderColor: 'var(--border-primary)',
+            color: 'var(--text-secondary)',
+            border: '1px solid'
+          }}
+        >
+          Pricing
+        </Link>
         <ThemeToggle />
+        <AuthButton />
         <a
-          className="flex max-w-fit items-center justify-center space-x-2 
+          className="hidden sm:flex max-w-fit items-center justify-center space-x-2 
                      rounded-full px-4 py-2 text-sm shadow-custom hover-scale
                      transition-all duration-300 hover:shadow-custom-lg"
           style={{

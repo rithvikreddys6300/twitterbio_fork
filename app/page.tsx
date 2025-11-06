@@ -37,28 +37,48 @@ export default function Home() {
     e.preventDefault();
     setGeneratedBios("");
     setLoading(true);
-    const response = await fetch("/api/together", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        prompt,
-        model: isLlama
-          ? "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo"
-          : "mistralai/Mixtral-8x7B-Instruct-v0.1",
-      }),
-    });
+    
+    try {
+      const response = await fetch("/api/together", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt,
+          model: isLlama
+            ? "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo"
+            : "mistralai/Mixtral-8x7B-Instruct-v0.1",
+        }),
+      });
 
-    if (!response.ok) {
-      throw new Error(response.statusText);
+      if (!response.ok) {
+        const error = await response.json();
+        if (response.status === 401) {
+          toast.error("Please sign in to generate bios");
+          setTimeout(() => window.location.href = "/api/auth/signin", 1500);
+          setLoading(false);
+          return;
+        }
+        if (response.status === 402) {
+          toast.error("Insufficient credits! Please purchase more credits.");
+          setTimeout(() => window.location.href = "/pricing", 2000);
+          setLoading(false);
+          return;
+        }
+        throw new Error(error.error || response.statusText);
+      }
+
+      const runner = ChatCompletionStream.fromReadableStream(response.body!);
+      runner.on("content", (delta) => setGeneratedBios((prev) => prev + delta));
+
+      scrollToBios();
+      setLoading(false);
+    } catch (error: any) {
+      console.error("Generation error:", error);
+      toast.error(error.message || "Failed to generate bio");
+      setLoading(false);
     }
-
-    const runner = ChatCompletionStream.fromReadableStream(response.body!);
-    runner.on("content", (delta) => setGeneratedBios((prev) => prev + delta));
-
-    scrollToBios();
-    setLoading(false);
   };
 
   return (
